@@ -26,6 +26,7 @@ class JPush {
   EventHandler? _onConnected;
   EventHandler? _onInAppMessageClick;
   EventHandler? _onInAppMessageShow;
+  EventHandler? _onCommandResult;
   void setup({
     String appKey = '',
     bool production = false,
@@ -58,6 +59,9 @@ class JPush {
 
   //APP活跃在前台时是否展示通知
   void setUnShowAtTheForeground({bool unShow = false}) {
+    if (Platform.isAndroid) {
+      return;
+    }
     print(flutter_log + "setUnShowAtTheForeground:");
     _channel.invokeMethod('setUnShowAtTheForeground', {'UnShow': unShow});
   }
@@ -78,12 +82,52 @@ class JPush {
     _channel.invokeMethod('setAuth', {'enable': enable});
   }
 
-  void setLbsEnable({bool enable = true}) {
+  void setLinkMergeEnable({bool enable = true}) {
     if (Platform.isIOS) {
       return;
     }
-    print(flutter_log + "setLbsEnable:");
-    _channel.invokeMethod('setLbsEnable', {'enable': enable});
+    print(flutter_log + "setLinkMergeEnable:");
+    _channel.invokeMethod('setLinkMergeEnable', {'enable': enable});
+  }
+
+  void setGeofenceEnable({bool enable = true}) {
+    if (Platform.isIOS) {
+      return;
+    }
+    print(flutter_log + "setGeofenceEnable:");
+    _channel.invokeMethod('setGeofenceEnable', {'enable': enable});
+  }
+
+  void setSmartPushEnable({bool enable = true}) {
+    if (Platform.isIOS) {
+      return;
+    }
+    print(flutter_log + "setSmartPushEnable:");
+    _channel.invokeMethod('setSmartPushEnable', {'enable': enable});
+  }
+
+  void setCollectControl({
+    bool imsi = true, // only android
+    bool mac = true, // only android
+    bool wifi = true, // only android
+    bool bssid = true, // only android
+    bool ssid = true, // only android
+    bool imei = true, // only android
+    bool cell = true, // only android
+    bool gps = true, // only ios
+  }) {
+    print(flutter_log + "setCollectControl:");
+
+    _channel.invokeMethod('setCollectControl', {
+      'imsi': imsi,
+      'mac': mac,
+      'wifi': wifi,
+      'bssid': bssid,
+      'ssid': ssid,
+      'imei': imei,
+      'cell': cell,
+      'gps': gps
+    });
   }
 
   ///
@@ -98,6 +142,7 @@ class JPush {
     EventHandler? onConnected,
     EventHandler? onInAppMessageClick,
     EventHandler? onInAppMessageShow,
+    EventHandler? onCommandResult,
   }) {
     print(flutter_log + "addEventHandler:");
 
@@ -109,6 +154,7 @@ class JPush {
     _onConnected = onConnected;
     _onInAppMessageClick = onInAppMessageClick;
     _onInAppMessageShow = onInAppMessageShow;
+    _onCommandResult = onCommandResult;
     _channel.setMethodCallHandler(_handleMethod);
   }
 
@@ -133,6 +179,8 @@ class JPush {
         return _onInAppMessageClick!(call.arguments.cast<String, dynamic>());
       case "onInAppMessageShow":
         return _onInAppMessageShow!(call.arguments.cast<String, dynamic>());
+      case "onCommandResult":
+        return _onCommandResult!(call.arguments.cast<String, dynamic>());
       default:
         throw new UnsupportedError("Unrecognized Event");
     }
